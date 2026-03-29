@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Android Game Hub v2</title>
+    <style>
+        :root { --primary: #e74c3c; --bg: #121212; --text: #eee; }
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        nav { background: #1a1a1a; width: 100%; padding: 10px 0; text-align: center; border-bottom: 2px solid #333; }
+        .nav-btns { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; padding: 0 10px; }
+        .nav-btn { background: #333; border: 1px solid #444; color: white; padding: 10px; cursor: pointer; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
+        .nav-btn.active-btn { background: var(--primary); border-color: #ff6b6b; }
+        .game-container { width: 100%; max-width: 500px; padding: 10px; display: none; flex-direction: column; align-items: center; }
+        .active { display: flex; }
+        canvas { background: #000; border: 2px solid #333; border-radius: 5px; max-width: 100%; height: auto; }
+        
+        /* UI Elements */
+        .stats { margin: 10px 0; font-weight: bold; color: #ff4757; font-size: 1.2em; }
+        .snake-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .s-btn { background: #333; border: none; color: white; padding: 15px; border-radius: 5px; font-size: 20px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-btns">
+        <button class="nav-btn active-btn" onclick="showGame('zombie')">🧟 Zombie</button>
+        <button class="nav-btn" onclick="showGame('snake')">🐍 Snake</button>
+        <button class="nav-btn" onclick="showGame('clicker')">🖱️ Clicker</button>
+        <button class="nav-btn" onclick="showGame('pong')">🏓 Pong</button>
+    </div>
+</nav>
+
+<div id="zombie" class="game-container active">
+    <h3>🧟 Zombie Survival</h3>
+    <div class="stats" id="z-score">Score: 0</div>
+    <canvas id="zombieCanvas" width="400" height="500"></canvas>
+    <p style="font-size: 0.8em;">Tik op het scherm om te schieten!</p>
+</div>
+
+<div id="snake" class="game-container">
+    <h3>🐍 Snake</h3>
+    <canvas id="snakeCanvas" width="400" height="400"></canvas>
+    <div class="snake-controls">
+        <div style="grid-column:2"><button class="s-btn" onclick="setSnakeDir('UP')">⬆️</button></div>
+        <div style="grid-column:1; grid-row:2"><button class="s-btn" onclick="setSnakeDir('LEFT')">⬅️</button></div>
+        <div style="grid-column:3; grid-row:2"><button class="s-btn" onclick="setSnakeDir('RIGHT')">➡️</button></div>
+        <div style="grid-column:2; grid-row:3"><button class="s-btn" onclick="setSnakeDir('DOWN')">⬇️</button></div>
+    </div>
+</div>
+
+<div id="clicker" class="game-container">
+    <h3>🖱️ Clicker</h3>
+    <h1 id="c-score">0</h1>
+    <button onclick="addPoint()" style="width:150px; height:150px; border-radius:50%; background:red; color:white; font-size:20px; border:none; box-shadow:0 10px #800;">KLIK</button>
+</div>
+
+<div id="pong" class="game-container">
+    <h3>🏓 Pong</h3>
+    <canvas id="pongCanvas" width="400" height="500"></canvas>
+</div>
+
+<script>
+    let currentLoop;
+
+    function showGame(id) {
+        document.querySelectorAll('.game-container').forEach(g => g.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active-btn');
+        
+        cancelAnimationFrame(currentLoop);
+        if(id === 'zombie') startZombie();
+        if(id === 'snake') startSnake();
+        if(id === 'pong') startPong();
+    }
+
+    // --- ZOMBIE GAME LOGICA ---
+    const zCanvas = document.getElementById('zombieCanvas');
+    const zCtx = zCanvas.getContext('2d');
+    let player, zombies, bullets, zScore, spawnRate;
+
+    function startZombie() {
+        player = { x: zCanvas.width/2, y: zCanvas.height/2, r: 15 };
+        zombies = [];
+        bullets = [];
+        zScore = 0;
+        spawnRate = 0.02;
+        updateZombie();
+    }
+
+    zCanvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        let rect = zCanvas.getBoundingClientRect();
+        let touch = e.touches[0];
+        let tx = (touch.clientX - rect.left) * (zCanvas.width / rect.width);
+        let ty = (touch.clientY - rect.top) * (zCanvas.height / rect.height);
+        
+        let angle = Math.atan2(ty - player.y, tx - player.x);
+        bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 7, vy: Math.sin(angle) * 7 });
+    });
+
+    function updateZombie() {
+        zCtx.fillStyle = '#1a2a1a'; zCtx.fillRect(0,0,zCanvas.width,zCanvas.height);
+        
+        // Player
+        zCtx.fillStyle = '#3498db'; zCtx.beginPath(); zCtx.arc(player.x, player.y, player.r, 0, Math.PI*2); zCtx.fill();
+        
+        // Spawn
+        if(Math.random() < spawnRate) {
+            let side = Math.floor(Math.random()*4);
+            let zx, zy;
+            if(side==0){zx=Math.random()*zCanvas.width; zy=-20;}
+            else if(side==1){zx=Math.random()*zCanvas.width; zy=zCanvas.height+20;}
+            else if(side==2){zx=-20; zy=Math.random()*zCanvas.height;}
+            else {zx=zCanvas.width+20; zy=Math.random()*zCanvas.height;}
+            zombies.push({x: zx, y: zy, s: 1 + Math.random()});
+        }
+
+        // Bullets
+        bullets.forEach((b, bi) => {
+            b.x += b.vx; b.y += b.vy;
+            zCtx.fillStyle = 'yellow'; zCtx.fillRect(b.x, b.y, 5, 5);
+            if(b.x<0 || b.x>zCanvas.width || b.y<0 || b.y>zCanvas.height) bullets.splice(bi, 1);
+        });
+
+        // Zombies
+        zombies.forEach((z, zi) => {
+            let dx = player.x - z.x; let dy = player.y - z.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            z.x += (dx/dist) * z.s; z.y += (dy/dist) * z.s;
+            
+            zCtx.fillStyle = '#2ecc71'; zCtx.beginPath(); zCtx.arc(z.x, z.y, 12, 0, Math.PI*2); zCtx.fill();
+            
+            // Hit check
+            if(dist < player.r + 10) { alert("Je bent opgegeten! Score: " + zScore); startZombie(); }
+            
+            bullets.forEach((b, bi) => {
+                let bDist = Math.sqrt((z.x-b.x)**2 + (z.y-b.y)**2);
+                if(bDist < 15) {
+                    zombies.splice(zi, 1); bullets.splice(bi, 1);
+                    zScore++; spawnRate += 0.0005;
+                    document.getElementById('z-score').innerText = "Score: " + zScore;
+                }
+            });
+        });
+
+        currentLoop = requestAnimationFrame(updateZombie);
+    }
+
+    // --- KLASSIEKE GAMES (SNAKE/CLICKER/PONG) ---
+    // (Hieronder staan de verkorte versies van de eerdere code om alles werkend te houden)
+    let sDir = 'RIGHT', snake = [{x:200, y:200}], sFood = {x:100, y:100}, sScore = 0;
+    function setSnakeDir(d) { sDir = d; }
+    function startSnake() {
+        sCtx = document.getElementById('snakeCanvas').getContext('2d');
+        function loop() {
+            sCtx.fillStyle='black'; sCtx.fillRect(0,0,400,400);
+            let head = {...snake[0]};
+            if(sDir=='UP') head.y-=20; if(sDir=='DOWN') head.y+=20;
+            if(sDir=='LEFT') head.x-=20; if(sDir=='RIGHT') head.x+=20;
+            if(head.x<0||head.x>=400||head.y<0||head.y>=400) { alert('Game Over'); snake=[{x:200,y:200}]; sScore=0; }
+            snake.unshift(head);
+            if(head.x==sFood.x && head.y==sFood.y) { sFood={x:Math.floor(Math.random()*19)*20, y:Math.floor(Math.random()*19)*20}; sScore++; }
+            else { snake.pop(); }
+            sCtx.fillStyle='lime'; snake.forEach(p=>sCtx.fillRect(p.x, p.y, 18, 18));
+            sCtx.fillStyle='red'; sCtx.fillRect(sFood.x, sFood.y, 18, 18);
+            setTimeout(() => { if(document.getElementById('snake').classList.contains('active')) requestAnimationFrame(loop); }, 150);
+        }
+        loop();
+    }
+
+    let points = 0;
+    function addPoint() { points++; document.getElementById('c-score').innerText = points; }
+
+    function startPong() {
+        const pCanvas = document.getElementById('pongCanvas');
+        const pCtx = pCanvas.getContext('2d');
+        let bx=200, by=250, bvx=3, bvy=3, px=150;
+        pCanvas.addEventListener('touchmove', e => {
+            let rect = pCanvas.getBoundingClientRect();
+            px = (e.touches[0].clientX - rect.left) * (400/rect.width) - 50;
+        });
+        function loop() {
+            pCtx.fillStyle='black'; pCtx.fillRect(0,0,400,500);
+            pCtx.fillStyle='white'; pCtx.fillRect(px, 470, 100, 15);
+            pCtx.beginPath(); pCtx.arc(bx, by, 8, 0, Math.PI*2); pCtx.fill();
+            bx+=bvx; by+=bvy;
+            if(bx<0 || bx>400) bvx*=-1;
+            if(by<0) bvy*=-1;
+            if(by>470 && bx>px && bx<px+100) bvy*=-1;
+            if(by>500) { bx=200; by=250; }
+            currentLoop = requestAnimationFrame(loop);
+        }
+        loop();
+    }
+
+    // Start direct met Zombie game
+    startZombie();
+</script>
+</body>
+</html>
