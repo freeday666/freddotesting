@@ -1,84 +1,146 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Android Game Hub v2</title>
-    <!-- Voeg base-URL toe voor correct laden -->
-    <base href="http://10.1.248.91:8080/">
-    <style>
-        :root { --primary: #e74c3c; --bg: #121212; --text: #eee; }
-        * { box-sizing: border-box; touch-action: manipulation; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        nav { background: #1a1a1a; width: 100%; padding: 10px 0; text-align: center; border-bottom: 2px solid #333; }
-        .nav-btns { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; padding: 0 10px; }
-        .nav-btn { background: #333; border: 1px solid #444; color: white; padding: 10px; cursor: pointer; border-radius: 5px; font-size: 12px; flex: 1; min-width: 80px; }
-        .nav-btn.active-btn { background: var(--primary); border-color: #ff6b6b; }
-        .game-container { width: 100%; max-width: 500px; padding: 10px; display: none; flex-direction: column; align-items: center; }
-        .active { display: flex; }
-        canvas { background: #000; border: 2px solid #333; border-radius: 5px; max-width: 100%; height: auto; }
-        /* UI Elements */
-        .stats { margin: 10px 0; font-weight: bold; color: #ff4757; font-size: 1.2em; }
-        .snake-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .s-btn { background: #333; border: none; color: white; padding: 15px; border-radius: 5px; font-size: 20px; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Embedded Games lijst</title>
+<style>
+  /* Basis styling zoals eerder */
+  :root {
+    --primary: #e74c3c;
+    --bg: #121212;
+    --text: #eee;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    background: #1a1a1a;
+    padding: 15px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0;
+  }
+  nav {
+    display: flex;
+    justify-content: center;
+    background: #222;
+  }
+  nav button {
+    padding: 10px 20px;
+    background: #333;
+    border: none;
+    color: white;
+    cursor: pointer;
+    margin: 5px;
+    border-radius: 4px;
+  }
+  nav button:hover, .active {
+    background: var(--primary);
+  }
+  main {
+    padding: 20px;
+  }
+  .game-section {
+    display: none;
+  }
+  .game-section.active {
+    display: block;
+  }
+  .game-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--primary);
+  }
+  iframe {
+    width: 100%;
+    height: 600px;
+    border: none;
+  }
+  @media(max-width: 1024px){
+    iframe {
+      height: 400px;
+    }
+  }
+</style>
 </head>
 <body>
+
+<header>
+  <h1>Embedded Games</h1>
+</header>
+
 <nav>
-    <div class="nav-btns">
-        <button class="nav-btn active-btn" onclick="showGame('zombie')">🧟 Zombie</button>
-        <button class="nav-btn" onclick="showGame('snake')">🐍 Snake</button>
-        <button class="nav-btn" onclick="showGame('clicker')">🖱️ Clicker</button>
-        <button class="nav-btn" onclick="showGame('pong')">🏓 Pong</button>
-    </div>
+  <button class="active" onclick="showGame('ping')">Ping Pong</button>
+  <button onclick="showGame('racing')">Racing</button>
+  <button onclick="showGame('town')">Chilling Town</button>
+  <button onclick="showGame('ship')">Ship</button>
+  <button onclick="showGame('penalty')">Penalty Challenge</button>
 </nav>
 
-<div id="zombie" class="game-container active">
-    <h3>🧟 Zombie Survival</h3>
-    <div class="stats" id="z-score">Score: 0</div>
-    <canvas id="zombieCanvas" width="400" height="500"></canvas>
-    <p style="font-size: 0.8em;">Tik op het scherm om te schieten!</p>
-</div>
-
-<div id="snake" class="game-container">
-    <h3>🐍 Snake</h3>
-    <canvas id="snakeCanvas" width="400" height="400"></canvas>
-    <div class="snake-controls">
-        <div style="grid-column:2"><button class="s-btn" onclick="setSnakeDir('UP')">⬆️</button></div>
-        <div style="grid-column:1; grid-row:2"><button class="s-btn" onclick="setSnakeDir('LEFT')">⬅️</button></div>
-        <div style="grid-column:3; grid-row:2"><button class="s-btn" onclick="setSnakeDir('RIGHT')">➡️</button></div>
-        <div style="grid-column:2; grid-row:3"><button class="s-btn" onclick="setSnakeDir('DOWN')">⬇️</button></div>
+<main>
+  <!-- Ping Pong -->
+  <section id="ping" class="game-section active">
+    <div class="game-container">
+      <h2>Ping Pong</h2>
+      <!-- Vervang de src door de echte embed-URL van de game -->
+      <iframe src="https://www.crazygames.com/game/ping-pong" allowfullscreen></iframe>
     </div>
-</div>
-
-<div id="clicker" class="game-container">
-    <h3>🖱️ Clicker</h3>
-    <h1 id="c-score">0</h1>
-    <button onclick="addPoint()" style="width:150px; height:150px; border-radius:50%; background:red; color:white; font-size:20px; border:none; box-shadow:0 10px #800;">KLIK</button>
-</div>
-
-<div id="pong" class="game-container">
-    <h3>🏓 Pong</h3>
-    <canvas id="pongCanvas" width="400" height="500"></canvas>
-</div>
+  </section>
+  
+  <!-- Racing -->
+  <section id="racing" class="game-section">
+    <div class="game-container">
+      <h2>Racing</h2>
+      <iframe src="https://www.crazygames.com/game/racing-game" allowfullscreen></iframe>
+    </div>
+  </section>
+  
+  <!-- Chilling Town -->
+  <section id="town" class="game-section">
+    <div class="game-container">
+      <h2>Chilling Town</h2>
+      <iframe src="https://www.spel.nl/game/chilling-town" allowfullscreen></iframe>
+    </div>
+  </section>
+  
+  <!-- Ship -->
+  <section id="ship" class="game-section">
+    <div class="game-container">
+      <h2>Ship</h2>
+      <iframe src="https://www.crazygames.com/game/ship-game" allowfullscreen></iframe>
+    </div>
+  </section>
+  
+  <!-- Penalty Challenge Multiplayer -->
+  <section id="penalty" class="game-section">
+    <div class="game-container">
+      <h2>Penalty Challenge Multiplayer</h2>
+      <iframe src="https://spele.nl/penalty-challenge-multiplayer-spel/" allowfullscreen></iframe>
+    </div>
+  </section>
+</main>
 
 <script>
-    // Jouw JavaScript code hier (zoals eerder gedeeld)
-    let currentLoop;
-
-    function showGame(id) {
-        document.querySelectorAll('.game-container').forEach(g => g.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-btn'));
-        document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active-btn');
-        cancelAnimationFrame(currentLoop);
-        if(id === 'zombie') startZombie();
-        if(id === 'snake') startSnake();
-        if(id === 'pong') startPong();
-    }
-
-    // ... rest van je code blijft hetzelfde ...
-    // (je kunt je volledige script hier plaatsen)
+  function showGame(id) {
+    document.querySelectorAll('.game-section').forEach(sec => sec.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelector(`button[onclick="showGame('${id}')"]`).classList.add('active');
+  }
 </script>
+
 </body>
 </html>
