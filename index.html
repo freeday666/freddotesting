@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Blacklist Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Blacklist Management</h1>
+        <div class="section">
+            <h2>Add to Blacklist</h2>
+            <form id="blacklistForm">
+                <input type="text" id="guildId" placeholder="Guild ID" required>
+                <input type="text" id="userId" placeholder="User ID" required>
+                <button type="submit">Blacklist</button>
+            </form>
+        </div>
+        <div class="section">
+            <h2>Remove from Blacklist</h2>
+            <form id="unblacklistForm">
+                <input type="text" id="guildId2" placeholder="Guild ID" required>
+                <input type="text" id="userId2" placeholder="User ID" required>
+                <button type="submit">Unblacklist</button>
+            </form>
+        </div>
+        <div class="section">
+            <h2>Blacklisted Users</h2>
+            <ul id="blacklist"></ul>
+            <button id="refresh">Refresh</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
